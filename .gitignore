@@ -1,0 +1,16 @@
+# Workspace-local tooling and caches
+.agents/
+.codex/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Runtime output owned by the local workstation
+logs/
+*.log
+
+# Local-only configuration
+.env
+.env.*
+!.env.example

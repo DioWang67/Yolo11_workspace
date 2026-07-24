@@ -1,0 +1,25 @@
+{
+  "folders": [
+    {
+      "name": "YOLO11 Training",
+      "path": "Yolo11_auto_train"
+    },
+    {
+      "name": "YOLO11 Inference",
+      "path": "yolo11_inference"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/__pycache__": true
+    },
+    "search.exclude": {
+      "**/build": true,
+      "**/dist": true,
+      "**/Result": true,
+      "**/runs": true
+    }
+  }
+}

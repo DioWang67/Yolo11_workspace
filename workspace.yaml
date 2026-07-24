@@ -1,0 +1,7 @@
+schema_version: 1
+projects:
+  training: Yolo11_auto_train
+  inference: yolo11_inference
+paths:
+  training_data: Yolo11_auto_train/data
+  inference_models: yolo11_inference/models
