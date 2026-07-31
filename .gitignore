@@ -3,6 +3,7 @@
 .codex/
 .mypy_cache/
 .pytest_cache/
+.tmp/
 .ruff_cache/
 .venv/
 
