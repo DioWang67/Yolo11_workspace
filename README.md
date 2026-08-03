@@ -19,6 +19,8 @@ yolo11_workspace/
 - Do not rename either child directory without updating `workspace.yaml`.
 - Runtime models remain owned by `yolo11_inference/models`; reviewed datasets,
   operator jobs, and training runs remain owned by `Yolo11_auto_train`.
+- Inspection images and the inspection-history database are stored in the
+  workspace-level `Result` directory configured by `paths.inference_results`.
 
 ## Clone
 
