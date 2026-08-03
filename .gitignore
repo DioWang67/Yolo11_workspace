@@ -10,6 +10,8 @@
 # Runtime output owned by the local workstation
 logs/
 *.log
+station_data/
+release_artifacts/
 
 # Local-only configuration
 .env
