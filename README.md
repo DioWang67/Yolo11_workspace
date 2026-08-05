@@ -48,3 +48,15 @@ git commit -m "Update workspace project revisions"
 
 This repository intentionally does not copy child repository history, model
 weights, datasets, inspection results, or local runtime logs.
+
+## Continuous integration
+
+The workspace workflow checks out the exact submodule revisions, rejects
+uninitialized or mismatched submodules, validates `workspace.yaml` through both
+projects' path implementations, and publishes JUnit reports. Each child
+repository then owns its full lint, type-check, Linux/Windows test, coverage,
+and package gates.
+
+CI actions are pinned to immutable commit SHAs. Dependabot groups the scheduled
+GitHub Actions, Python dependency, and submodule updates so those pins remain
+maintainable.

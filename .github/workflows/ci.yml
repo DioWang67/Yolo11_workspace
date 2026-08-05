@@ -1,0 +1,76 @@
+name: Workspace CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workspace-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONUTF8: "1"
+
+jobs:
+  workspace-contract:
+    name: Submodules and workspace contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: ${{ github.workspace }}/Yolo11_auto_train/src:${{ github.workspace }}/yolo11_inference
+    steps:
+      - name: Check out pinned projects
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Verify submodule revisions
+        shell: bash
+        run: |
+          submodule_status="$(git submodule status --recursive)"
+          echo "$submodule_status"
+          if grep -Eq '^[+-U]' <<<"$submodule_status"; then
+            echo "A submodule is uninitialized, conflicted, or not at the pinned revision." >&2
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: .github/requirements-ci.txt
+
+      - name: Install contract-test dependencies
+        run: python -m pip install --requirement .github/requirements-ci.txt
+
+      - name: Validate the checked-out workspace
+        run: python scripts/validate_workspace.py --root .
+
+      - name: Test training workspace paths
+        run: |
+          python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"
+          python -m pytest -q Yolo11_auto_train/tests/test_workspace_paths.py \
+            --junitxml=reports/training-workspace-junit.xml
+
+      - name: Test inference workspace paths
+        run: |
+          python -m pytest -q yolo11_inference/tests/test_workspace_paths.py \
+            --junitxml=reports/inference-workspace-junit.xml
+
+      - name: Upload contract-test report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: workspace-contract-report
+          path: reports/*-workspace-junit.xml
+          if-no-files-found: warn
+          retention-days: 14
