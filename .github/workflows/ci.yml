@@ -55,6 +55,11 @@ jobs:
       - name: Validate the checked-out workspace
         run: python scripts/validate_workspace.py --root .
 
+      - name: Verify workspace contract test collection
+        run: |
+          python -m pytest --collect-only -q Yolo11_auto_train/tests/test_workspace_paths.py
+          python -m pytest --collect-only -q yolo11_inference/tests/test_workspace_paths.py
+
       - name: Test training workspace paths
         run: |
           python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"

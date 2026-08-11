@@ -109,6 +109,19 @@ def validate_workspace(root: Path) -> dict[str, str]:
         training_paths.inference_models,
         inference_paths.inference_models,
     )
+    _require_equal_path(
+        "station data", training_paths.station_data, inference_paths.station_data
+    )
+    _require_equal_path(
+        "inference results",
+        training_paths.inference_results,
+        inference_paths.inference_results,
+    )
+    _require_equal_path(
+        "inference artifacts",
+        training_paths.inference_artifacts,
+        inference_paths.inference_artifacts,
+    )
     _require_equal_path("training checkout", training_paths.training_project, training_root)
     _require_equal_path(
         "inference checkout", training_paths.inference_project, inference_root
@@ -119,6 +132,11 @@ def validate_workspace(root: Path) -> dict[str, str]:
         "workspace_root": str(workspace_root),
         "training_project": str(training_paths.training_project),
         "inference_project": str(training_paths.inference_project),
+        "training_data": str(training_paths.training_data),
+        "inference_models": str(training_paths.inference_models),
+        "station_data": str(training_paths.station_data),
+        "inference_results": str(training_paths.inference_results),
+        "inference_artifacts": str(training_paths.inference_artifacts),
     }
 
 
