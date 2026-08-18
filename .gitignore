@@ -1,6 +1,8 @@
 # Workspace-local tooling and caches
 .agents/
 .codex/
+__pycache__/
+*.py[cod]
 .mypy_cache/
 .pytest_cache/
 .tmp/

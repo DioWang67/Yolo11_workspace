@@ -49,14 +49,32 @@ git commit -m "Update workspace project revisions"
 This repository intentionally does not copy child repository history, model
 weights, datasets, inspection results, or local runtime logs.
 
+Select a local Python interpreter in VS Code after cloning. The shared workspace
+does not pin an absolute Conda or Python installation path because developer and
+station layouts may differ.
+
 ## Continuous integration
 
 The workspace workflow checks out the exact submodule revisions, rejects
-uninitialized or mismatched submodules, validates `workspace.yaml` through both
-projects' path implementations, and publishes JUnit reports. Each child
-repository then owns its full lint, type-check, Linux/Windows test, coverage,
-and package gates.
+uninitialized or mismatched submodules, requires successful named GitHub checks
+for those exact child commits, reruns both projects' blocking lint and type-check
+gates, validates `workspace.yaml` through both path implementations, and
+publishes JUnit reports. Each child repository still owns its full Linux/Windows
+test, coverage, runtime, executable, and package gates.
 
 CI actions are pinned to immutable commit SHAs. Dependabot groups the scheduled
 GitHub Actions, Python dependency, and submodule updates so those pins remain
 maintainable.
+
+Configure the optional `SUBMODULE_CHECKS_TOKEN` Actions secret with read-only
+Checks access to both child repositories to raise the GitHub API rate limit.
+Public repositories also work without it, using GitHub's unauthenticated limit.
+
+## Merge gate
+
+Before updating `main`, require successful child-repository checks for the exact
+two gitlink commits, successful Workspace CI, completed operational acceptance
+for production-facing changes, and substantive review of each child PR. If a
+child PR is squash- or rebase-merged, update the workspace gitlink to the final
+commit reachable from that child repository's default branch and rerun all
+workspace checks.

@@ -22,7 +22,7 @@ jobs:
   workspace-contract:
     name: Submodules and workspace contract
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       PYTHONPATH: ${{ github.workspace }}/Yolo11_auto_train/src:${{ github.workspace }}/yolo11_inference
     steps:
@@ -49,11 +49,65 @@ jobs:
           cache: pip
           cache-dependency-path: .github/requirements-ci.txt
 
+      - name: Require successful checks for the exact child revisions
+        env:
+          SUBMODULE_CHECKS_TOKEN: ${{ secrets.SUBMODULE_CHECKS_TOKEN }}
+        run: python scripts/verify_submodule_checks.py --root .
+
       - name: Install contract-test dependencies
         run: python -m pip install --requirement .github/requirements-ci.txt
 
+      - name: Verify dependency consistency
+        env:
+          # Avoid discovering developer-only editable metadata in child sources.
+          PYTHONPATH: ""
+        run: python -m pip check
+
+      - name: Lint pinned training revision
+        working-directory: Yolo11_auto_train
+        run: python -m ruff check src tests
+
+      - name: Type-check pinned training revision
+        working-directory: Yolo11_auto_train
+        run: python -m mypy src/picture_tool
+
+      - name: Check pinned inference revision
+        working-directory: yolo11_inference
+        run: |
+          python -m ruff check core app camera tools tests --select E9,F63,F7,F82,F811,B023
+          python -m ruff check \
+            core/services/inspection_database.py \
+            core/services/inspection_excel_report.py \
+            core/services/inspection_history.py \
+            core/services/inspection_maintenance.py \
+            core/services/inspection_release_store.py \
+            core/services/inspection_sync.py \
+            app/gui/inspection_history_page.py \
+            app/gui/panels/control_panel.py \
+            tools/check_runtime_environment.py \
+            tools/inspection_sync_admin.py \
+            tools/maintain_inspection_data.py \
+            tools/production_preflight.py \
+            tools/restore_inspection_database.py
+          python -m mypy --follow-imports=skip --ignore-missing-imports --explicit-package-bases \
+            core/services/inspection_database.py \
+            core/services/inspection_excel_report.py \
+            core/services/inspection_history.py \
+            core/services/inspection_maintenance.py \
+            core/services/inspection_release_store.py \
+            core/services/inspection_sync.py \
+            app/gui/inspection_history_page.py \
+            app/gui/panels/control_panel.py \
+            tools/check_runtime_environment.py \
+            tools/inspection_sync_admin.py \
+            tools/production_preflight.py \
+            tools/restore_inspection_database.py
+
       - name: Validate the checked-out workspace
         run: python scripts/validate_workspace.py --root .
+
+      - name: Test workspace validator failure paths
+        run: python -m pytest -q tests
 
       - name: Verify workspace contract test collection
         run: |

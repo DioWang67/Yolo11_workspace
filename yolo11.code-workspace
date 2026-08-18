@@ -10,7 +10,6 @@
     }
   ],
   "settings": {
-    "python.defaultInterpreterPath": "D:\\miniconda\\envs\\yolo_anomalib\\python.exe",
     "files.exclude": {
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,

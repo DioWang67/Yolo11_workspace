@@ -6,9 +6,12 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Sequence
+
+import yaml
 
 
 WORKSPACE_ENVIRONMENT_VARIABLE = "YOLO11_WORKSPACE_ROOT"
@@ -42,6 +45,17 @@ def _configured_workspace(root: Path) -> Iterator[None]:
             os.environ[WORKSPACE_ENVIRONMENT_VARIABLE] = previous_value
 
 
+@contextmanager
+def _configured_import_paths(*paths: Path) -> Iterator[None]:
+    """Temporarily prioritize both checked-out implementations for validation."""
+    previous_paths = list(sys.path)
+    sys.path[:0] = [str(path) for path in paths]
+    try:
+        yield
+    finally:
+        sys.path[:] = previous_paths
+
+
 def _require_equal_path(label: str, first: Path, second: Path) -> None:
     if first.resolve() != second.resolve():
         raise WorkspaceValidationError(
@@ -49,16 +63,48 @@ def _require_equal_path(label: str, first: Path, second: Path) -> None:
         )
 
 
+def _project_roots_from_manifest(
+    workspace_root: Path,
+    manifest_path: Path,
+) -> tuple[Path, Path]:
+    try:
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as error:
+        raise WorkspaceValidationError(
+            f"Workspace manifest is unreadable: {error}"
+        ) from error
+    projects = manifest.get("projects") if isinstance(manifest, Mapping) else None
+    if not isinstance(projects, Mapping):
+        raise WorkspaceValidationError("Workspace manifest has no projects mapping.")
+
+    resolved: list[Path] = []
+    for project_name in ("training", "inference"):
+        raw_path = projects.get(project_name)
+        if not isinstance(raw_path, str) or not raw_path.strip():
+            raise WorkspaceValidationError(
+                f"Workspace project path is missing: projects.{project_name}"
+            )
+        project_root = (workspace_root / raw_path).resolve()
+        if not project_root.is_relative_to(workspace_root):
+            raise WorkspaceValidationError(
+                f"Workspace project escapes its root: projects.{project_name}"
+            )
+        resolved.append(project_root)
+    return resolved[0], resolved[1]
+
+
 def validate_workspace(root: Path) -> dict[str, str]:
     """Load both implementations and require one consistent path contract."""
     workspace_root = root.expanduser().resolve()
     manifest_path = workspace_root / "workspace.yaml"
-    training_root = workspace_root / "Yolo11_auto_train"
-    inference_root = workspace_root / "yolo11_inference"
-    training_source = training_root / "src"
 
     if not manifest_path.is_file():
         raise WorkspaceValidationError(f"Workspace manifest is missing: {manifest_path}")
+    training_root, inference_root = _project_roots_from_manifest(
+        workspace_root,
+        manifest_path,
+    )
+    training_source = training_root / "src"
     if not training_source.is_dir():
         raise WorkspaceValidationError(
             f"Training submodule is not initialized: {training_root}"
@@ -68,15 +114,15 @@ def validate_workspace(root: Path) -> dict[str, str]:
             f"Inference submodule is not initialized: {inference_root}"
         )
 
-    sys.path[:0] = [str(training_source), str(inference_root)]
-    from core.workspace import (  # pylint: disable=import-outside-toplevel
-        WorkspaceConfigurationError as InferenceWorkspaceConfigurationError,
-        load_workspace_paths,
-    )
-    from picture_tool.workspace_paths import (  # pylint: disable=import-outside-toplevel
-        WorkspaceConfigurationError as TrainingWorkspaceConfigurationError,
-        WorkspacePaths as TrainingWorkspacePaths,
-    )
+    with _configured_import_paths(training_source, inference_root):
+        from core.workspace import (  # pylint: disable=import-outside-toplevel
+            WorkspaceConfigurationError as InferenceWorkspaceConfigurationError,
+            load_workspace_paths,
+        )
+        from picture_tool.workspace_paths import (  # pylint: disable=import-outside-toplevel
+            WorkspaceConfigurationError as TrainingWorkspaceConfigurationError,
+            WorkspacePaths as TrainingWorkspacePaths,
+        )
 
     try:
         training_paths = TrainingWorkspacePaths.from_manifest(manifest_path)

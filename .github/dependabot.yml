@@ -19,4 +19,19 @@ updates:
       day: monday
       time: "09:00"
       timezone: Asia/Taipei
+    groups:
+      submodules:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /.github
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Taipei
+    groups:
+      python-ci:
+        patterns: ["*"]
     open-pull-requests-limit: 5
