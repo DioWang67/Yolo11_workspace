@@ -15,7 +15,11 @@ from scripts.validate_workspace import (
     _project_roots_from_manifest,
     _require_equal_path,
     main,
+    validate_workspace,
 )
+
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_configured_workspace_restores_absent_environment_variable(
@@ -95,3 +99,21 @@ def test_main_reports_missing_manifest_as_structured_error(
     assert exit_code == 1
     assert payload["event"] == "workspace_contract_invalid"
     assert "manifest is missing" in payload["error"]
+
+
+def test_checked_out_workspace_contract_and_success_output(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = validate_workspace(WORKSPACE_ROOT)
+
+    assert result["event"] == "workspace_contract_validated"
+    assert Path(result["workspace_root"]) == WORKSPACE_ROOT
+    assert Path(result["training_project"]) == WORKSPACE_ROOT / "Yolo11_auto_train"
+    assert Path(result["inference_project"]) == WORKSPACE_ROOT / "yolo11_inference"
+    assert Path(result["inference_results"]) == WORKSPACE_ROOT / "Result"
+
+    exit_code = main(["--root", str(WORKSPACE_ROOT)])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload == result

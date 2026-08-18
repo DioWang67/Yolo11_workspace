@@ -70,6 +70,18 @@ Configure the optional `SUBMODULE_CHECKS_TOKEN` Actions secret with read-only
 Checks access to both child repositories to raise the GitHub API rate limit.
 Public repositories also work without it, using GitHub's unauthenticated limit.
 
+For an inference gitlink on a feature branch, the normal push and pull-request
+runs skip `Verified Windows executable`. Dispatch the child `CI` workflow on the
+feature branch whose HEAD is the exact gitlink SHA before updating this
+workspace:
+
+```powershell
+gh workflow run ci.yml --repo DioWang67/Yolo_anomalib --ref <feature-branch>
+```
+
+The workspace gate remains closed until one current child check suite has every
+required check, including the Windows executable, completed successfully.
+
 ## Merge gate
 
 Before updating `main`, require successful child-repository checks for the exact

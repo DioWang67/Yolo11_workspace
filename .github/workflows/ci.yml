@@ -106,8 +106,8 @@ jobs:
       - name: Validate the checked-out workspace
         run: python scripts/validate_workspace.py --root .
 
-      - name: Test workspace validator failure paths
-        run: python -m pytest -q tests
+      - name: Test workspace scripts with coverage
+        run: python -m pytest -q tests --cov=scripts --cov-report=term-missing --cov-fail-under=80
 
       - name: Verify workspace contract test collection
         run: |

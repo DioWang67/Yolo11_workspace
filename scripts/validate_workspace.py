@@ -99,7 +99,9 @@ def validate_workspace(root: Path) -> dict[str, str]:
     manifest_path = workspace_root / "workspace.yaml"
 
     if not manifest_path.is_file():
-        raise WorkspaceValidationError(f"Workspace manifest is missing: {manifest_path}")
+        raise WorkspaceValidationError(
+            f"Workspace manifest is missing: {manifest_path}"
+        )
     training_root, inference_root = _project_roots_from_manifest(
         workspace_root,
         manifest_path,
@@ -168,7 +170,9 @@ def validate_workspace(root: Path) -> dict[str, str]:
         training_paths.inference_artifacts,
         inference_paths.inference_artifacts,
     )
-    _require_equal_path("training checkout", training_paths.training_project, training_root)
+    _require_equal_path(
+        "training checkout", training_paths.training_project, training_root
+    )
     _require_equal_path(
         "inference checkout", training_paths.inference_project, inference_root
     )
