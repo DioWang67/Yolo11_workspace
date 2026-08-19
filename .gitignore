@@ -1,14 +1,20 @@
 # Workspace-local tooling and caches
 .agents/
 .codex/
+__pycache__/
+*.py[cod]
 .mypy_cache/
 .pytest_cache/
+.tmp/
 .ruff_cache/
 .venv/
 
 # Runtime output owned by the local workstation
 logs/
 *.log
+station_data/
+release_artifacts/
+Result/
 
 # Local-only configuration
 .env
