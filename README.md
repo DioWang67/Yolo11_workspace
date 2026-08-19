@@ -90,3 +90,8 @@ for production-facing changes, and substantive review of each child PR. If a
 child PR is squash- or rebase-merged, update the workspace gitlink to the final
 commit reachable from that child repository's default branch and rerun all
 workspace checks.
+
+Duplicate-filter code may be integrated before the 500-cycle/full-shift pilot
+only while the production configuration remains `report_only` (or disabled).
+Changing it to `suppress` is a production-facing activation and still requires
+the documented pilot evidence and named approvals.
